@@ -1,0 +1,203 @@
+.result-main {
+  background: #111827;
+  min-height: 100vh;
+  padding: 28px;
+  color: #e5e7eb;
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+
+  h1 { font-size: 1.4rem; font-weight: 700; color: #f3f4f6; margin-bottom: 4px; }
+  p { font-size: 0.82rem; color: #9ca3af; }
+}
+
+.btn-back {
+  display: flex; align-items: center; gap: 6px;
+  background: #1f2937; border: 1px solid #374151;
+  color: #9ca3af; border-radius: 8px; padding: 8px 14px;
+  font-size: 0.82rem; cursor: pointer; transition: all 0.2s;
+  white-space: nowrap; flex-shrink: 0;
+  &:hover { color: white; border-color: #6b7280; }
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 1200px;
+
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
+}
+
+.left-col, .right-col { display: flex; flex-direction: column; gap: 16px; }
+
+/* Risk card */
+.risk-card {
+  border-radius: 14px;
+  padding: 22px;
+  &.risk-alto { background: linear-gradient(135deg, #7f1d1d, #991b1b); border: 1px solid #b91c1c; }
+  &.risk-medio { background: linear-gradient(135deg, #78350f, #92400e); border: 1px solid #b45309; }
+  &.risk-bajo { background: linear-gradient(135deg, #14532d, #166534); border: 1px solid #15803d; }
+}
+
+.risk-top {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 20px;
+}
+
+.risk-icon-wrap {
+  width: 52px; height: 52px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.risk-label { font-size: 0.78rem; color: rgba(255,255,255,0.7); margin-bottom: 3px; }
+.risk-level { font-size: 1.2rem; font-weight: 700; color: white; }
+.risk-badge {
+  margin-left: auto;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.confidence-section { margin-bottom: 16px; }
+.conf-row {
+  display: flex; justify-content: space-between;
+  font-size: 0.82rem; color: rgba(255,255,255,0.8);
+  margin-bottom: 8px;
+  strong { color: white; font-size: 0.95rem; }
+}
+.conf-bar-bg { background: rgba(255,255,255,0.2); border-radius: 4px; height: 8px; overflow: hidden; }
+.conf-bar { height: 100%; background: white; border-radius: 4px; transition: width 0.6s; }
+
+.risk-meta {
+  display: flex; flex-direction: column; gap: 6px;
+  border-top: 1px solid rgba(255,255,255,0.15);
+  padding-top: 14px;
+}
+.meta-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.8rem; color: rgba(255,255,255,0.75);
+}
+
+/* Heatmap card */
+.heatmap-card, .meta-card, .factors-card, .rec-card, .actions-card {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 14px;
+  padding: 20px;
+
+  h3 { font-size: 0.95rem; font-weight: 700; color: #f3f4f6; margin-bottom: 4px; }
+}
+
+.card-sub { font-size: 0.78rem; color: #9ca3af; margin-bottom: 14px; }
+
+.heatmap-area {
+  background: #2d3748;
+  border-radius: 10px;
+  height: 200px;
+  position: relative;
+  overflow: hidden;
+}
+
+.heatmap-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.heat-zone {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(18px);
+  opacity: 0.6;
+  &.high { background: #ef4444; }
+  &.medium { background: #f97316; }
+  &.low { background: #eab308; }
+}
+
+.heatmap-legend {
+  position: absolute; bottom: 10px; right: 10px;
+  background: rgba(0,0,0,0.6);
+  border-radius: 8px; padding: 8px 12px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.hl-item { display: flex; align-items: center; gap: 7px; font-size: 0.72rem; color: #d1d5db; }
+.hl-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* Meta rows */
+.meta-rows { display: flex; flex-direction: column; gap: 0; margin-top: 12px; }
+.meta-row {
+  display: flex; justify-content: space-between;
+  padding: 9px 0; border-bottom: 1px solid #374151;
+  font-size: 0.83rem;
+  span:first-child { color: #9ca3af; }
+  span:last-child { color: #e5e7eb; font-weight: 500; }
+  &:last-child { border-bottom: none; }
+}
+
+/* Factors */
+.factors-list { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+.factor-item { }
+.factor-header {
+  display: flex; justify-content: space-between;
+  font-size: 0.83rem; color: #d1d5db; margin-bottom: 6px;
+}
+.factor-pct { font-weight: 700; }
+.factor-bar-bg { background: #374151; border-radius: 4px; height: 7px; overflow: hidden; }
+.factor-bar { height: 100%; border-radius: 4px; transition: width 0.5s; }
+
+/* Recommendations */
+.rec-card h3 { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.rec-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.rec-list li {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 0.85rem; color: #d1d5db; line-height: 1.5;
+}
+.rec-dot {
+  width: 8px; height: 8px; background: #f59e0b;
+  border-radius: 50%; flex-shrink: 0; margin-top: 5px;
+}
+
+/* Actions */
+.action-btns { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+
+.btn-action {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+  border: none; border-radius: 10px; padding: 12px 20px;
+  font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+
+  &.primary {
+    background: linear-gradient(135deg, #E84B1A, #ff6b3d); color: white;
+    &:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(232,75,26,0.35); }
+  }
+  &.download {
+    background: #1f2937; color: #e5e7eb; border: 1px solid #374151;
+    &:hover { background: #2d3748; }
+  }
+  &.gov-report {
+    background: linear-gradient(135deg, #059669, #10b981); color: white;
+    &:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16,185,129,0.35); }
+  }
+}
+
+/* Gov note */
+.gov-note {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: rgba(59,130,246,0.08);
+  border: 1px solid rgba(59,130,246,0.25);
+  border-radius: 12px; padding: 16px;
+  font-size: 0.82rem; color: #93c5fd; line-height: 1.6;
+  svg { flex-shrink: 0; margin-top: 2px; }
+}

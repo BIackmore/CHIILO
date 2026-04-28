@@ -1,0 +1,69 @@
+<div class="auth-page">
+  <button class="corner-theme" (click)="theme.toggle()" [title]="theme.isDark ? 'Modo claro' : 'Modo oscuro'">
+    <svg *ngIf="theme.isDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg *ngIf="!theme.isDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+  </button>
+
+  <div class="auth-wrap">
+    <div class="brand-block">
+      <div class="brand-flame">
+        <svg viewBox="0 0 32 42" fill="none" width="28" height="36"><path d="M16 2C10 13 6 17 6 23a10 10 0 0020 0c0-6-4-10-10-21z" fill="url(#rfg)"/><path d="M16 15C13 20 12 22 12 25a4 4 0 008 0c0-3-2-5-4-10z" fill="rgba(255,210,100,0.9)"/><defs><linearGradient id="rfg" x1="16" y1="2" x2="16" y2="43" gradientUnits="userSpaceOnUse"><stop stop-color="#FF8A50"/><stop offset="1" stop-color="#BF360C"/></linearGradient></defs></svg>
+      </div>
+      <h1>Sistema de Prevención de Incendios</h1>
+      <p>Tepoztlán, Morelos</p>
+    </div>
+
+    <div class="auth-card">
+      <h2>Crear Cuenta</h2>
+      <p class="auth-sub">Completa el formulario para registrarte en el sistema</p>
+
+      <div *ngIf="error" class="error-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        {{ error }}
+      </div>
+
+      <div class="field">
+        <label>Nombre Completo <span class="req">*</span></label>
+        <div class="input-icon-wrap">
+          <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <input type="text" [(ngModel)]="name" placeholder="Juan Pérez" (keyup.enter)="onSubmit()"/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Correo Electrónico <span class="req">*</span></label>
+        <div class="input-icon-wrap">
+          <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <input type="email" [(ngModel)]="email" placeholder="tu@correo.com" (keyup.enter)="onSubmit()"/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Contraseña <span class="req">*</span></label>
+        <div class="input-icon-wrap">
+          <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <input [type]="showPw?'text':'password'" [(ngModel)]="password" placeholder="Mínimo 6 caracteres" (keyup.enter)="onSubmit()"/>
+          <button class="eye-btn" type="button" (click)="showPw=!showPw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+        <p class="hint">Mínimo 6 caracteres</p>
+      </div>
+
+      <div class="field">
+        <label>Confirmar Contraseña <span class="req">*</span></label>
+        <div class="input-icon-wrap">
+          <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <input [type]="showCp?'text':'password'" [(ngModel)]="confirmPassword" placeholder="Repite tu contraseña" (keyup.enter)="onSubmit()"/>
+          <button class="eye-btn" type="button" (click)="showCp=!showCp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+
+      <button class="btn-ember w-full" (click)="onSubmit()" [disabled]="loading">
+        <span class="spinner" *ngIf="loading"></span>
+        {{ loading ? 'Creando cuenta...' : 'Crear Cuenta' }}
+      </button>
+
+      <p class="login-link">¿Ya tienes cuenta? <a routerLink="/login" class="link-ember">Inicia sesión aquí</a></p>
+      <p class="privacy-link-txt">Al registrarte aceptas nuestro <a routerLink="/privacy" class="link-ember">Aviso de Privacidad</a></p>
+    </div>
+  </div>
+</div>
