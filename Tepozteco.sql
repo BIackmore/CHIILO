@@ -41,11 +41,31 @@ CREATE TABLE IF NOT EXISTS tepozteco.imagenes (
   fecha_carga TIMESTAMP WITH TIME ZONE DEFAULT now(),
   resolucion_width INT,
   resolucion_height INT,
-  tamaño_bytes BIGINT,
+  tamano_bytes BIGINT,
   descripcion TEXT,
   geom geometry(Point, 4326),       -- ubicación (lat,lon) opcional
   metadata JSONB                     -- EXIF u otros metadatos
 );
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'tepozteco'
+      AND table_name = 'imagenes'
+      AND column_name = 'tamaño_bytes'
+  ) AND NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'tepozteco'
+      AND table_name = 'imagenes'
+      AND column_name = 'tamano_bytes'
+  ) THEN
+    ALTER TABLE tepozteco.imagenes RENAME COLUMN "tamaño_bytes" TO tamano_bytes;
+  END IF;
+END;
+$$;
 
 -- Catálogo de niveles de riesgo
 CREATE TABLE IF NOT EXISTS tepozteco.niveles_riesgo (
@@ -85,7 +105,7 @@ CREATE TABLE IF NOT EXISTS tepozteco.reportes (
 CREATE TABLE IF NOT EXISTS tepozteco.bitacoras (
   id_log BIGSERIAL PRIMARY KEY,
   tabla_nombre VARCHAR(150) NOT NULL,
-  operacion VARCHAR(10) NOT NULL CHECK (operacion IN ('INSERT','UPDATE','DELETE')),
+  operacion VARCHAR(10) NOT NULL CHECK (operacion IN ('INSERT','UPDATE','DELETE','SELECT')),
   registro_id TEXT,              -- id del registro afectado (texto para flexibilidad)
   cambiado_por VARCHAR(50),      -- id_usuario (se intenta obtener de app.current_user_id)
   cambiado_por_rol VARCHAR(50),  -- CAMPO AGREGADO PARA CORREGIR EL ERROR DEL INSERT
@@ -96,17 +116,33 @@ CREATE TABLE IF NOT EXISTS tepozteco.bitacoras (
   id_reporte INT REFERENCES tepozteco.reportes(id_reporte) ON DELETE SET NULL
 );
 
+ALTER TABLE tepozteco.bitacoras DROP CONSTRAINT IF EXISTS bitacoras_operacion_check;
+ALTER TABLE tepozteco.bitacoras
+  ADD CONSTRAINT bitacoras_operacion_check
+  CHECK (operacion IN ('INSERT','UPDATE','DELETE','SELECT'));
+
 -- 6) Índices espaciales y de búsqueda
 -- Índices para acelerar consultas
 CREATE INDEX IF NOT EXISTS idx_imagenes_geom ON tepozteco.imagenes USING GIST (geom);
 CREATE INDEX IF NOT EXISTS idx_analisis_zonas_gist ON tepozteco.analisis USING GIST (zonas_detectadas);
 CREATE INDEX IF NOT EXISTS idx_analisis_fecha ON tepozteco.analisis (fecha_analisis);
 CREATE INDEX IF NOT EXISTS idx_imagenes_uuid ON tepozteco.imagenes (uuid);
+CREATE INDEX IF NOT EXISTS idx_imagenes_usuario ON tepozteco.imagenes (id_usuario);
+CREATE INDEX IF NOT EXISTS idx_analisis_imagen ON tepozteco.analisis (id_imagen);
+CREATE INDEX IF NOT EXISTS idx_analisis_riesgo ON tepozteco.analisis (id_riesgo);
+CREATE INDEX IF NOT EXISTS idx_reportes_usuario ON tepozteco.reportes (id_usuario);
+CREATE INDEX IF NOT EXISTS idx_reportes_analisis ON tepozteco.reportes (id_analisis);
+CREATE INDEX IF NOT EXISTS idx_bitacoras_tabla_fecha ON tepozteco.bitacoras (tabla_nombre, fecha DESC);
+CREATE INDEX IF NOT EXISTS idx_niveles_riesgo_clave_lower ON tepozteco.niveles_riesgo (LOWER(clave));
+CREATE INDEX IF NOT EXISTS idx_roles_nombre_lower ON tepozteco.roles (LOWER(nombre));
+CREATE INDEX IF NOT EXISTS idx_usuarios_perfil_num_trabajador ON tepozteco.usuarios ((perfil->>'numTrabajador'));
 
 -- 7) Datos iniciales útiles
 INSERT INTO tepozteco.roles (nombre, descripcion)
   VALUES ('ADMIN','Administrador del sistema'),
-         ('AUTORIDAD','Usuario autoridad/gestor')
+         ('GOV','Usuario gubernamental/gestor'),
+         ('USER','Usuario general'),
+         ('AUTORIDAD','Rol legado de autoridad/gestor')
   ON CONFLICT (nombre) DO NOTHING;
 
 INSERT INTO tepozteco.niveles_riesgo (clave, descripcion, prioridad, color_hex)
@@ -299,7 +335,8 @@ VALUES (
   (SELECT id_rol FROM tepozteco.roles WHERE nombre = 'ADMIN'),
   TRUE,
   '{"organizacion": "Sistema de Prevención de Incendios", "estado": "activo", "fechaCreacion": "28/04/2026"}'
-);
+)
+ON CONFLICT (correo) DO NOTHING;
 
 SELECT 
     u.id_usuario, 

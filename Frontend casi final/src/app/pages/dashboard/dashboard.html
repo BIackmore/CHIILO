@@ -27,7 +27,12 @@
   <!-- Dashboard content -->
   <div class="dash-content" *ngIf="activeTab==='dashboard'">
 
-    <div class="main-grid">
+    <div class="tab-placeholder" *ngIf="loading || error" style="min-height: 220px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--fog)" stroke-width="1.5" width="48" height="48"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      <p>{{ loading ? 'Cargando dashboard...' : error }}</p>
+    </div>
+
+    <div class="main-grid" *ngIf="!loading && !error">
       <!-- MAP -->
       <div class="map-card">
         <h3 class="card-title">Mapa de Detección</h3>
@@ -102,7 +107,7 @@
     </div>
 
     <!-- Stats row -->
-    <div class="stats-row">
+    <div class="stats-row" *ngIf="!loading && !error">
       <div *ngFor="let s of stats" class="stat-card">
         <div class="sc-icon" [style.background]="s.bg">
           <svg *ngIf="s.icon==='fire'"  viewBox="0 0 24 24" fill="none" [attr.stroke]="s.color" stroke-width="2" width="20" height="20"><path d="M12 2C8.5 7 6 9.5 6 13a6 6 0 0012 0c0-3.5-2.5-6-6-11z"/></svg>

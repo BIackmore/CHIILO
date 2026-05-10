@@ -6,6 +6,16 @@
   accentClass="accent-gov"
   (tabChange)="activeTab=$event">
 
+  <div class="modal-error" *ngIf="error" style="margin-bottom: 16px;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    {{ error }}
+  </div>
+
+  <div class="modal-success" *ngIf="loading" style="margin-bottom: 16px;">
+    <span class="spinner"></span>
+    Cargando informacion del panel...
+  </div>
+
   <!-- ═══ BITÁCORA ═══ -->
   <ng-container *ngIf="activeTab==='bitacora'">
     <div class="sec-head"><div><h2>Bitácora de Reportes – Zonas de Riesgo</h2><p>Monitoreo de zonas críticas que requieren atención de Protección Civil</p></div></div>
@@ -28,6 +38,7 @@
             <td><span class="badge" [class]="z.estado.includes('Requiere')?'b-orange':z.estado.includes('Bajo Control')?'b-ok':'b-info'">{{ z.estado }}</span></td>
             <td style="font-family:monospace;font-size:0.73rem;color:var(--text-muted)">{{ z.coords }}</td>
           </tr>
+          <tr *ngIf="filteredZonas.length===0"><td colspan="7" class="empty-cell">No hay zonas registradas</td></tr>
         </tbody>
       </table>
     </div>
@@ -92,6 +103,7 @@
           <div class="img-btns"><button class="btn-ghost" style="flex:1;justify-content:center;padding:8px">Ver</button><button class="btn-ghost" style="flex:1;justify-content:center;padding:8px">Descargar</button></div>
         </div>
       </div>
+      <div class="empty-cell" *ngIf="filteredImagenes.length===0">No hay imagenes disponibles</div>
     </div>
   </ng-container>
 
@@ -122,6 +134,7 @@
           <p class="rep-inc">⚠️ {{ r.inc }} incidentes incluidos</p>
           <button class="btn-ok w-full"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/></svg>Descargar PDF</button>
         </div>
+        <div class="empty-cell" *ngIf="repsGuardados.length===0">No hay reportes generados todavia</div>
       </div>
     </div>
   </ng-container>

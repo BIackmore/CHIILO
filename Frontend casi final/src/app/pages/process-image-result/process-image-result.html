@@ -16,6 +16,24 @@
   </div>
 
   <div class="result-grid">
+    <div class="hist-empty" *ngIf="loading || error" style="grid-column: 1 / -1; margin-bottom: 0;">
+      <div class="empty-icon" *ngIf="loading">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--fog)" stroke-width="1.5" width="44" height="44">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+      </div>
+      <div class="empty-icon" *ngIf="error">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--fog)" stroke-width="1.5" width="44" height="44">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <p>{{ loading ? 'Cargando resultado del analisis...' : error }}</p>
+    </div>
+
+    <ng-container *ngIf="!loading && !error">
     <!-- Left column -->
     <div class="left-col">
 
@@ -164,5 +182,6 @@
       </div>
 
     </div>
+    </ng-container>
   </div>
 </main>

@@ -6,6 +6,16 @@
   accentClass="accent-ember"
   (tabChange)="activeTab=$event">
 
+  <div class="modal-error" *ngIf="error" style="margin-bottom: 16px;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    {{ error }}
+  </div>
+
+  <div class="modal-success" *ngIf="loading" style="margin-bottom: 16px;">
+    <span class="spinner"></span>
+    Cargando informacion del panel...
+  </div>
+
   <!-- ═══════════════════════════════════════════
        GESTIÓN + HISTORIAL DE USUARIOS
   ═══════════════════════════════════════════ -->
@@ -131,6 +141,9 @@
               <td class="muted-text">{{ h.fecha }}</td>
               <td class="muted-text" style="font-family:monospace;font-size:0.78rem">{{ h.ip }}</td>
             </tr>
+            <tr *ngIf="historialActividad.length===0">
+              <td colspan="4" class="empty-cell">No hay actividad registrada</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -166,6 +179,9 @@
             <td class="muted-text" style="font-size:0.78rem">{{ r.fecha }}</td>
             <td><span class="badge" [class]="r.estado==='Atendido'||r.estado==='Completado'?'b-ok':r.estado==='En Proceso'?'b-purple':'b-neutral'">{{ r.estado }}</span></td>
             <td><button class="ico-btn ico-edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button></td>
+          </tr>
+          <tr *ngIf="filteredReportes.length===0">
+            <td colspan="8" class="empty-cell">No hay reportes disponibles</td>
           </tr>
         </tbody>
       </table>
@@ -204,6 +220,7 @@
           </div>
         </div>
       </div>
+      <div class="empty-cell" *ngIf="imagenes.length===0">No hay imagenes registradas</div>
     </div>
   </ng-container>
 
@@ -223,6 +240,7 @@
         <div class="zona-inc"><svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2" width="13" height="13"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg><span>Incidentes registrados</span><strong>{{ z.inc }}</strong></div>
         <button class="btn-ember" style="width:100%;justify-content:center">Ver Detalles Completos</button>
       </div>
+      <div class="empty-cell" *ngIf="zonas.length===0">No hay zonas detectadas aun</div>
     </div>
   </ng-container>
 

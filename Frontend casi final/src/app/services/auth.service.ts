@@ -1,121 +1,292 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { BehaviorSubject, Observable, catchError, map, of, switchMap, tap } from 'rxjs';
+
+import {
+  AuthApiService,
+  AuthProfile,
+  AuthResponse,
+  AuthUser,
+  LoginRequest,
+  RefreshResponse,
+  RefreshTokenRequest,
+  RegisterGovRequest,
+  RegisterRequest,
+} from '../api/auth-api.service';
 
 export interface UserProfile {
+  id_usuario?: number;
   nombre: string;
   correo: string;
-  rol: 'admin' | 'gov' | 'user';
+  rol: string;
   organizacion?: string;
-  // Campos exclusivos del usuario gubernamental
   numTrabajador?: string;
-  dependencia?:   string;
-  cargo?:         string;
-  telefono?:      string;
-  estado?:        'activo' | 'inactivo' | 'pendiente';
+  dependencia?: string;
+  cargo?: string;
+  telefono?: string;
+  estado?: 'activo' | 'inactivo' | 'pendiente';
   fechaCreacion?: string;
+  activo?: boolean;
+  fecha_registro?: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private readonly authApi = inject(AuthApiService);
+  private readonly router = inject(Router);
 
-  private users: { correo: string; password: string; perfil: UserProfile }[] = [
-    {
-      correo: 'denysrodriguez1102@gmail.com',
-      password: 'TTA2070',
-      perfil: {
-        nombre: 'Denys Rodríguez', correo: 'denysrodriguez1102@gmail.com',
-        rol: 'admin', organizacion: 'Sistema de Prevención de Incendios',
-        estado: 'activo', fechaCreacion: '01/01/2025'
-      }
-    },
-    {
-      correo: 'proyectodispositivos8@gmail.com',
-      password: 'TTA2070',
-      perfil: {
-        nombre: 'Dr. Jesus', correo: 'proyectodispositivos8@gmail.com',
-        rol: 'gov', organizacion: 'Secretaría de Medio Ambiente – Morelos',
-        numTrabajador: 'MOR-2025-001', dependencia: 'Secretaría de Medio Ambiente',
-        cargo: 'Analista de Riesgos', telefono: '777-000-0000',
-        estado: 'activo', fechaCreacion: '10/01/2025'
-      }
-    },
-    {
-      correo: 'usuario@test.com',
-      password: 'TTA2070',
-      perfil: {
-        nombre: 'Usuario Común', correo: 'usuario@test.com',
-        rol: 'user', estado: 'activo', fechaCreacion: '15/01/2025'
-      }
-    }
-  ];
+  private readonly tokenStorageKey = 'auth.token';
+  private readonly refreshTokenStorageKey = 'auth.refresh_token';
+  private readonly userStorageKey = 'auth.user';
 
-  private currentUser: UserProfile | null = null;
+  private readonly currentUserSubject = new BehaviorSubject<UserProfile | null>(
+    this.readStoredUser(),
+  );
+  readonly currentUser$ = this.currentUserSubject.asObservable();
 
-  login(correo: string, password: string): UserProfile | null {
-    const found = this.users.find(
-      u => u.correo.toLowerCase() === correo.toLowerCase() && u.password === password
+  login(correo: string, password: string): Observable<UserProfile> {
+    const payload: LoginRequest = { correo, password };
+
+    return this.authApi.login(payload).pipe(
+      tap((response) =>
+        this.storeSession(this.getAccessToken(response), this.getRefreshTokenValue(response), this.mapUser(response.user)),
+      ),
+      map((response) => this.mapUser(response.user)),
     );
-    if (found) { this.currentUser = found.perfil; return found.perfil; }
-    return null;
   }
 
-  /** Registro de usuario común  */
-  register(nombre: string, correo: string, password: string): UserProfile {
-    const hoy = new Date().toLocaleDateString('es-MX');
-    const perfil: UserProfile = { nombre, correo, rol: 'user', estado: 'activo', fechaCreacion: hoy };
-    this.users.push({ correo: correo.toLowerCase(), password, perfil });
-    this.currentUser = perfil;
-    return perfil;
+  register(nombre: string, correo: string, password: string): Observable<UserProfile> {
+    const payload: RegisterRequest = { nombre, correo, password };
+
+    return this.authApi.register(payload).pipe(
+      tap((response) =>
+        this.storeSession(this.getAccessToken(response), this.getRefreshTokenValue(response), this.mapUser(response.user)),
+      ),
+      map((response) => this.mapUser(response.user)),
+    );
   }
 
-  /** Registro de usuario gubernamental  */
   registerGov(data: {
-    nombre: string; correo: string; password: string;
-    organizacion: string; numTrabajador: string;
-    dependencia: string; cargo: string; telefono: string;
-  }): { ok: boolean; error?: string } {
-    if (this.existeCorreo(data.correo))
-      return { ok: false, error: 'Ya existe una cuenta con ese correo.' };
-    if (this.existeNumTrabajador(data.numTrabajador))
-      return { ok: false, error: 'El número de trabajador ya está registrado.' };
-
-    const hoy = new Date().toLocaleDateString('es-MX');
-    const perfil: UserProfile = {
-      nombre: data.nombre, correo: data.correo, rol: 'gov',
-      organizacion: data.organizacion, numTrabajador: data.numTrabajador,
-      dependencia: data.dependencia, cargo: data.cargo, telefono: data.telefono,
-      estado: 'activo', fechaCreacion: hoy
+    nombre: string;
+    correo: string;
+    password: string;
+    organizacion: string;
+    numTrabajador: string;
+    dependencia: string;
+    cargo: string;
+    telefono: string;
+  }): Observable<{ ok: boolean; error?: string }> {
+    const payload: RegisterGovRequest = {
+      nombre: data.nombre,
+      correo: data.correo,
+      password: data.password,
+      telefono: data.telefono,
+      organizacion: data.organizacion,
+      numTrabajador: data.numTrabajador,
+      dependencia: data.dependencia,
+      cargo: data.cargo,
+      perfil: {
+        organizacion: data.organizacion,
+        numTrabajador: data.numTrabajador,
+        dependencia: data.dependencia,
+        cargo: data.cargo,
+      },
     };
-    this.users.push({ correo: data.correo.toLowerCase(), password: data.password, perfil });
-    return { ok: true };
+
+    return this.authApi.registerGov(payload).pipe(
+      map(() => ({ ok: true })),
+      catchError((error) =>
+        of({ ok: false, error: this.getErrorMessage(error, 'Error al guardar.') }),
+      ),
+    );
   }
 
-  /** Eliminar usuario */
-  deleteUser(correo: string): void {
-    this.users = this.users.filter(u => u.correo.toLowerCase() !== correo.toLowerCase());
+  restoreSession(): Observable<UserProfile | null> {
+    const token = this.getToken();
+    if (!token) {
+      this.clearSession();
+      return of(null);
+    }
+
+    return this.authApi.me().pipe(
+      map((response) => this.mapUser(response.user)),
+      tap((user) => this.storeUser(user)),
+      catchError(() => this.tryRefreshSession()),
+    );
   }
 
-  /** Actualizar estado */
-  setEstado(correo: string, estado: 'activo' | 'inactivo'): void {
-    const found = this.users.find(u => u.correo.toLowerCase() === correo.toLowerCase());
-    if (found) found.perfil.estado = estado;
+  refreshSession(): Observable<UserProfile | null> {
+    return this.tryRefreshSession();
   }
 
-  /** Obtener todos los usuarios */
+  logout(): void {
+    this.clearSession();
+  }
+
+  handleUnauthorized(): void {
+    this.clearSession();
+    void this.router.navigate(['/login']);
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem(this.tokenStorageKey);
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem(this.refreshTokenStorageKey);
+  }
+
+  getUser(): UserProfile | null {
+    return this.currentUserSubject.value;
+  }
+
+  isLoggedIn(): boolean {
+    return !!this.getToken() && !!this.getUser();
+  }
+
+  existeCorreo(_correo: string): boolean {
+    return false;
+  }
+
+  deleteUser(_correo: string): void {}
+
+  setEstado(_correo: string, _estado: 'activo' | 'inactivo'): void {}
+
   getAllUsers(): UserProfile[] {
-    return this.users
-      .filter(u => u.perfil.rol !== 'admin')
-      .map(u => u.perfil);
+    return [];
   }
 
-  existeCorreo(correo: string): boolean {
-    return this.users.some(u => u.correo.toLowerCase() === correo.toLowerCase());
+  existeNumTrabajador(_num: string): boolean {
+    return false;
   }
 
-  existeNumTrabajador(num: string): boolean {
-    return this.users.some(u => u.perfil.numTrabajador?.toLowerCase() === num.toLowerCase());
+  private tryRefreshSession(): Observable<UserProfile | null> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      this.clearSession();
+      return of(null);
+    }
+
+    const payload: RefreshTokenRequest = { refreshToken };
+
+    return this.authApi.refresh(payload).pipe(
+      switchMap((response) => this.handleRefreshResponse(response)),
+      catchError(() => {
+        this.clearSession();
+        return of(null);
+      }),
+    );
   }
 
-  logout() { this.currentUser = null; }
-  getUser(): UserProfile | null { return this.currentUser; }
-  isLoggedIn(): boolean { return !!this.currentUser; }
+  private handleRefreshResponse(response: RefreshResponse): Observable<UserProfile | null> {
+    const currentUser = this.getUser();
+    const accessToken = this.getAccessToken(response);
+    const refreshToken = this.getRefreshTokenValue(response);
+
+    if (currentUser) {
+      this.storeSession(accessToken, refreshToken, currentUser);
+      return of(currentUser);
+    }
+
+    localStorage.setItem(this.tokenStorageKey, accessToken);
+    localStorage.setItem(this.refreshTokenStorageKey, refreshToken);
+
+    return this.authApi.me().pipe(
+      map((meResponse) => this.mapUser(meResponse.user)),
+      tap((user) => this.storeUser(user)),
+    );
+  }
+
+  private storeSession(token: string, refreshToken: string, user: UserProfile): void {
+    localStorage.setItem(this.tokenStorageKey, token);
+    localStorage.setItem(this.refreshTokenStorageKey, refreshToken);
+    this.storeUser(user);
+  }
+
+  private storeUser(user: UserProfile): void {
+    localStorage.setItem(this.userStorageKey, JSON.stringify(user));
+    this.currentUserSubject.next(user);
+  }
+
+  private clearSession(): void {
+    localStorage.removeItem(this.tokenStorageKey);
+    localStorage.removeItem(this.refreshTokenStorageKey);
+    localStorage.removeItem(this.userStorageKey);
+    this.currentUserSubject.next(null);
+  }
+
+  private readStoredUser(): UserProfile | null {
+    const storedUser = localStorage.getItem(this.userStorageKey);
+    if (!storedUser) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(storedUser) as UserProfile;
+    } catch {
+      localStorage.removeItem(this.userStorageKey);
+      return null;
+    }
+  }
+
+  private mapUser(user: AuthUser): UserProfile {
+    const profile = (user.perfil ?? {}) as AuthProfile;
+    const roleName = typeof user.rol === 'string' ? user.rol : user.rol?.nombre;
+
+    return {
+      id_usuario: user.id_usuario,
+      nombre: user.nombre,
+      correo: user.correo,
+      rol: this.normalizeRole(roleName),
+      organizacion: this.readString(profile['organizacion']),
+      numTrabajador: this.readString(profile['numTrabajador']),
+      dependencia: this.readString(profile['dependencia']),
+      cargo: this.readString(profile['cargo']),
+      telefono: user.telefono ?? this.readString(profile['telefono']),
+      estado: this.readStatus(profile['estado']),
+      fechaCreacion: this.readString(profile['fechaCreacion']),
+      activo: user.activo,
+      fecha_registro: user.fecha_registro,
+    };
+  }
+
+  private readString(value: unknown): string | undefined {
+    return typeof value === 'string' ? value : undefined;
+  }
+
+  private normalizeRole(value: string | undefined): string {
+    if (!value) {
+      return 'user';
+    }
+
+    const normalized = value.toLowerCase();
+    if (normalized === 'autoridad') {
+      return 'gov';
+    }
+    if (normalized === 'administrador') {
+      return 'admin';
+    }
+    return normalized;
+  }
+
+  private readStatus(value: unknown): UserProfile['estado'] {
+    return value === 'activo' || value === 'inactivo' || value === 'pendiente' ? value : undefined;
+  }
+
+  private getErrorMessage(error: unknown, fallback: string): string {
+    if (typeof error !== 'object' || error === null) {
+      return fallback;
+    }
+
+    const maybeError = error as { error?: { message?: string; error?: string } };
+    return maybeError.error?.message ?? maybeError.error?.error ?? fallback;
+  }
+
+  private getAccessToken(response: AuthResponse | RefreshResponse): string {
+    return response.token || response.accessToken || '';
+  }
+
+  private getRefreshTokenValue(response: AuthResponse | RefreshResponse): string {
+    return response.refreshToken || response.refresh_token || '';
+  }
 }

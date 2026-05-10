@@ -2,7 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
+
 import { AuthService } from '../../services/auth.service';
+import { AnalysisStats, PlatformApiService, PlatformImage } from '../../api/platform-api.service';
 import { ShellComponent, NavItem } from '../../shared/shell/shell';
 import { ExportService } from '../../services/export.service';
 
@@ -15,6 +18,8 @@ import { ExportService } from '../../services/export.service';
 })
 export class GovComponent implements OnInit {
   activeTab = 'procesar';
+  loading = false;
+  error = '';
 
   navItems: NavItem[] = [
     { tab:'procesar',    label:'Procesar Imagen',        icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>' },
@@ -24,8 +29,6 @@ export class GovComponent implements OnInit {
     { tab:'monitoreo',   label:'Monitoreo de Imágenes',  icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>' },
   ];
 
-  constructor(private auth: AuthService, private router: Router, private exportSvc: ExportService) {}
-
   exportMonitoreo() {
     this.exportSvc.exportImagenes(this.imagenes, 'monitoreo-imagenes-' + new Date().toISOString().slice(0,10));
   }
@@ -34,38 +37,38 @@ export class GovComponent implements OnInit {
     this.exportSvc.exportImagenes(this.miHistorial, 'mi-historial-' + new Date().toISOString().slice(0,10));
   }
 
-  ngOnInit() { if (!this.auth.getUser()) this.router.navigate(['/login']); }
+  constructor(
+    private auth: AuthService,
+    private router: Router,
+    private exportSvc: ExportService,
+    private platformApi: PlatformApiService,
+  ) {}
+
+  ngOnInit() {
+    if (!this.auth.getUser()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    this.loadGovData();
+  }
 
   // Métricas
   metricas = { precision:'94.5%', respuesta:'1.2s', disponibilidad:'99.8%', alertas:3, totalAnalisis:1247, precisionProm:'94.5%', uptime:'99.8%', ultimaAct:'23/11/2025, 8:05:20 a.m.' };
 
   // Bitácora
   bSearch = '';
-  zonas = [
-    { nombre:'Zona Norte – Sector A', ubicacion:'Cerro del Tepozteco',      riesgo:'Alto',  inc:5, ultimoInc:'21/11/2025, 10:30 a.m.', estado:'Requiere Protección Civil', coords:'18.9876°N, 99.0987°W' },
-    { nombre:'Zona Sur – Sector C',   ubicacion:'Valle de Atongo',          riesgo:'Medio', inc:2, ultimoInc:'20/11/2025, 03:45 p.m.', estado:'Monitoreo Continuo',       coords:'18.9654°N, 99.1023°W' },
-    { nombre:'Zona Este – Sector B',  ubicacion:'Amatlan de Quetzalcóatl',  riesgo:'Alto',  inc:4, ultimoInc:'20/11/2025, 08:15 a.m.', estado:'Requiere Protección Civil', coords:'18.9712°N, 99.0856°W' },
-    { nombre:'Zona Oeste – Sector D', ubicacion:'Santo Domingo Ocotitlán',  riesgo:'Bajo',  inc:1, ultimoInc:'19/11/2025, 08:00 p.m.', estado:'Bajo Control',             coords:'18.9823°N, 99.1145°W' },
-    { nombre:'Zona Central',          ubicacion:'Centro de Tepoztlán',      riesgo:'Medio', inc:2, ultimoInc:'19/11/2025, 12:00 p.m.', estado:'Monitoreo Continuo',       coords:'18.9847°N, 99.0934°W' },
-  ];
+  zonas: Array<{ nombre:string; ubicacion:string; riesgo:string; inc:number; ultimoInc:string; estado:string; coords:string }> = [];
   get filteredZonas() { const q=this.bSearch.toLowerCase(); return q?this.zonas.filter(z=>z.nombre.toLowerCase().includes(q)||z.ubicacion.toLowerCase().includes(q)||z.estado.toLowerCase().includes(q)):this.zonas; }
   get zonasAlto() { return this.zonas.filter(z=>z.riesgo==='Alto').length; }
   get zonasAtencion() { return this.zonas.filter(z=>z.estado.includes('Requiere')||z.riesgo==='Alto'||z.riesgo==='Medio').length; }
 
   // Historial propio del usuario gubernamental
-  miHistorial = [
-    { nombre:'zona_norte_scan.jpg',  fecha:'21/11/2025', resultado:'Incendio Detectado', confianza:95, tamano:'2.4 MB', color:'b-danger' },
-    { nombre:'sector_b_thermal.png', fecha:'20/11/2025', resultado:'Sin Incendio',       confianza:98, tamano:'3.1 MB', color:'b-ok'     },
-    { nombre:'bosque_este_01.jpg',   fecha:'19/11/2025', resultado:'Posible Incendio',   confianza:72, tamano:'1.8 MB', color:'b-warn'   },
-  ];
+  miHistorial: Array<{ id?: number; nombre:string; fecha:string; resultado:string; confianza:number; tamano:string; color:string }> = [];
 
   // Monitoreo
   mSearch = '';
-  imagenes = [
-    { nombre:'bosque_norte_01.jpg', zona:'Zona Norte', resultado:'Incendio Detectado', confianza:95, resolucion:'1920x1080', tamano:'2.4 MB', usuario:'Juan Pérez',     fecha:'21/11/2025', color:'b-danger' },
-    { nombre:'zona_sur_scan.png',   zona:'Zona Sur',   resultado:'Sin Incendio',       confianza:98, resolucion:'2560x1440', tamano:'3.1 MB', usuario:'María González', fecha:'20/11/2025', color:'b-ok' },
-    { nombre:'area_este_thermal.jpg',zona:'Zona Este', resultado:'Posible Incendio',   confianza:72, resolucion:'1280x720',  tamano:'1.8 MB', usuario:'Carlos Ramírez', fecha:'20/11/2025', color:'b-warn' },
-  ];
+  imagenes: Array<{ id?: number; analysisId?: number | null; nombre:string; zona:string; resultado:string; confianza:number; resolucion:string; tamano:string; usuario:string; fecha:string; color:string }> = [];
   get filteredImagenes() { const q=this.mSearch.toLowerCase(); return q?this.imagenes.filter(i=>i.nombre.toLowerCase().includes(q)||i.zona.toLowerCase().includes(q)):this.imagenes; }
 
   // Reporte
@@ -77,16 +80,34 @@ export class GovComponent implements OnInit {
     { zona:'Zona Este – Sector B',  fecha:'2025-11-20', riesgo:'Alta' },
     { zona:'Zona Oeste – Sector D', fecha:'2025-11-19', riesgo:'Baja' },
   ];
-  repsGuardados = [
-    { titulo:'Reporte Mensual – Noviembre 2025',   zona:'Todas las Zonas', fecha:'19/11/2025', inc:8 },
-    { titulo:'Análisis Zona Norte – Alta Prioridad', zona:'Zona Norte',    fecha:'18/11/2025', inc:5 },
-    { titulo:'Evaluación de Riesgos Semanales',    zona:'Múltiples Zonas', fecha:'17/11/2025', inc:12 },
-  ];
+  repsGuardados: Array<{ titulo:string; zona:string; fecha:string; inc:number }> = [];
   generando=false; repGenerado=false;
   generarReporte() {
-    if (!this.rep.titulo) return;
-    this.generando=true;
-    setTimeout(()=>{ this.generando=false; this.repGenerado=true; setTimeout(()=>this.repGenerado=false,3000); },1500);
+    const selectedImage = this.imagenes.find((image) => image.zona === this.rep.zona) ?? this.imagenes[0];
+    if (!this.rep.titulo || !selectedImage?.analysisId) return;
+
+    this.generando = true;
+    this.platformApi.createReport({
+      id_analisis: selectedImage.analysisId,
+      tipo: this.rep.titulo,
+      contenido_summary: this.rep.descripcion,
+      parametros: {
+        zona: this.rep.zona,
+        estado: 'En Proceso',
+        severidad: selectedImage.resultado,
+      },
+    }).subscribe({
+      next: () => {
+        this.generando = false;
+        this.repGenerado = true;
+        this.loadGovData();
+        setTimeout(() => this.repGenerado = false, 3000);
+      },
+      error: () => {
+        this.generando = false;
+        this.error = 'No se pudo generar el reporte.';
+      },
+    });
   }
 
   // Procesar
@@ -109,4 +130,102 @@ export class GovComponent implements OnInit {
     { dia:'Miércoles', fecha:'23 Nov', ico:'⛅', max:27, min:16, desc:'Parcialmente nublado', hum:45, viento:12, lluvia:10 },
     { dia:'Jueves',    fecha:'24 Nov', ico:'☁️', max:25, min:15, desc:'Nublado',              hum:55, viento:10, lluvia:30 },
   ];
+
+  private loadGovData() {
+    this.loading = true;
+    this.error = '';
+
+    forkJoin({
+      images: this.platformApi.getImages({ limit: 100 }),
+      reports: this.platformApi.getReports({ limit: 100 }),
+      analysisStats: this.platformApi.getAnalysisStats(),
+    }).subscribe({
+      next: ({ images, reports, analysisStats }) => {
+        this.loading = false;
+        this.imagenes = images.data.map((image) => this.mapImage(image));
+        this.miHistorial = this.imagenes.filter((image) => image.usuario === (this.auth.getUser()?.nombre ?? ''));
+        this.zonas = this.buildZones(images.data);
+        this.repsGuardados = reports.data.map((report) => ({
+          titulo: report.tipo,
+          zona: report.ubicacion ?? 'Sin zona',
+          fecha: report.fecha,
+          inc: report.severidad === 'alta' ? 1 : 0,
+        }));
+        this.applyStats(analysisStats.data);
+      },
+      error: () => {
+        this.loading = false;
+        this.error = 'No se pudo cargar la informacion gubernamental.';
+      },
+    });
+  }
+
+  private mapImage(image: PlatformImage) {
+    const risk = this.capitalize(image.nivel_riesgo ?? 'bajo');
+    return {
+      id: image.id_imagen,
+      analysisId: image.id_analisis,
+      nombre: image.nombre,
+      zona: image.zona ?? 'Sin zona',
+      resultado: risk === 'Alto' ? 'Incendio Detectado' : risk === 'Medio' ? 'Posible Incendio' : 'Sin Incendio',
+      confianza: image.confianza ?? 0,
+      resolucion: image.resolucion ?? 'N/D',
+      tamano: image.tamano ?? 'N/D',
+      usuario: image.usuario,
+      fecha: image.fecha ?? 'N/D',
+      color: this.getRiskBadge(image.nivel_riesgo),
+    };
+  }
+
+  private buildZones(images: PlatformImage[]) {
+    const grouped = new Map<string, PlatformImage[]>();
+
+    for (const image of images) {
+      const zone = image.zona ?? 'Sin zona';
+      const current = grouped.get(zone) ?? [];
+      current.push(image);
+      grouped.set(zone, current);
+    }
+
+    return Array.from(grouped.entries()).map(([zone, zoneImages]) => {
+      const riesgo = zoneImages.some((image) => image.nivel_riesgo === 'alto')
+        ? 'Alto'
+        : zoneImages.some((image) => image.nivel_riesgo === 'medio')
+          ? 'Medio'
+          : 'Bajo';
+
+      return {
+        nombre: zone,
+        ubicacion: zone,
+        riesgo,
+        inc: zoneImages.length,
+        ultimoInc: zoneImages[0]?.fecha ?? 'N/D',
+        estado: riesgo === 'Alto' ? 'Requiere Protección Civil' : riesgo === 'Medio' ? 'Monitoreo Continuo' : 'Bajo Control',
+        coords: 'N/D',
+      };
+    });
+  }
+
+  private applyStats(stats: AnalysisStats) {
+    this.metricas = {
+      precision: `${stats.precision_promedio ?? 0}%`,
+      respuesta: 'N/D',
+      disponibilidad: '99.8%',
+      alertas: Number(stats.total_alto ?? 0),
+      totalAnalisis: Number(stats.total_analisis ?? 0),
+      precisionProm: `${stats.precision_promedio ?? 0}%`,
+      uptime: '99.8%',
+      ultimaAct: stats.ultima_actualizacion ? new Date(stats.ultima_actualizacion).toLocaleString('es-MX') : 'N/D',
+    };
+  }
+
+  private getRiskBadge(level?: string | null): string {
+    if (level === 'alto') return 'b-danger';
+    if (level === 'medio') return 'b-warn';
+    return 'b-ok';
+  }
+
+  private capitalize(value: string): string {
+    return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+  }
 }

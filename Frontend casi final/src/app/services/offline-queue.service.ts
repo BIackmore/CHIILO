@@ -1,5 +1,9 @@
 import { Injectable } from '@angular/core';
 
+import { firstValueFrom } from 'rxjs';
+
+import { PlatformApiService } from '../api/platform-api.service';
+
 export interface QueuedImage {
   id: string;
   fileName: string;
@@ -20,7 +24,7 @@ export class OfflineQueueService {
   private db: IDBDatabase | null = null;
   isOnline = navigator.onLine;
 
-  constructor() {
+  constructor(private platformApi: PlatformApiService) {
     this.initDB();
     window.addEventListener('online',  () => { this.isOnline = true;  this.processQueue(); });
     window.addEventListener('offline', () => { this.isOnline = false; });
@@ -84,19 +88,13 @@ export class OfflineQueueService {
     }
   }
 
-  /* ── Simulate upload (replace with real API call) ── */
   private async uploadItem(item: QueuedImage): Promise<void> {
     item.status = 'uploading';
     await this.dbPut(item);
 
     try {
-      // ⬇️ REPLACE THIS with your real backend call:
-      // const formData = new FormData();
-      // formData.append('image', base64ToBlob(item.base64Data, item.fileType), item.fileName);
-      // await fetch('/api/analyze', { method: 'POST', body: formData });
-
-      // Simulation — 1.5 second delay
-      await new Promise(r => setTimeout(r, 1500));
+      const file = this.base64ToFile(item.base64Data, item.fileName, item.fileType);
+      await firstValueFrom(this.platformApi.uploadImage(file));
 
       item.status = 'done';
       await this.dbPut(item);
@@ -134,6 +132,19 @@ export class OfflineQueueService {
       reader.onerror = () => reject(reader.error);
       reader.readAsDataURL(file);
     });
+  }
+
+  private base64ToFile(dataUrl: string, fileName: string, fileType: string): File {
+    const [metadata, base64Data] = dataUrl.split(',');
+    const mimeType = metadata.match(/data:(.*);base64/)?.[1] || fileType || 'application/octet-stream';
+    const binary = atob(base64Data || '');
+    const bytes = new Uint8Array(binary.length);
+
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+
+    return new File([bytes], fileName, { type: mimeType });
   }
 
   /* ── IDB helpers ── */

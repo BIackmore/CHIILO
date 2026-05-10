@@ -10,22 +10,41 @@ import { ThemeService } from '../../services/theme.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './login.html',
-  styleUrl: './login.scss'
+  styleUrl: './login.scss',
 })
 export class LoginComponent {
-  email = ''; password = ''; showPw = false; loading = false; error = '';
-  constructor(private auth: AuthService, private router: Router, public theme: ThemeService) {}
-  togglePw() { this.showPw = !this.showPw; }
+  email = '';
+  password = '';
+  showPw = false;
+  loading = false;
+  error = '';
+  constructor(
+    private auth: AuthService,
+    private router: Router,
+    public theme: ThemeService,
+  ) {}
+  togglePw() {
+    this.showPw = !this.showPw;
+  }
   onSubmit() {
-    if (!this.email || !this.password) { this.error = 'Completa todos los campos.'; return; }
-    this.loading = true; this.error = '';
-    setTimeout(() => {
-      const user = this.auth.login(this.email, this.password);
-      this.loading = false;
-      if (!user) { this.error = 'Correo o contraseña incorrectos.'; return; }
-      if (user.rol === 'admin') this.router.navigate(['/admin']);
-      else if (user.rol === 'gov') this.router.navigate(['/gov']);
-      else this.router.navigate(['/home']);
-    }, 900);
+    if (!this.email || !this.password) {
+      this.error = 'Completa todos los campos.';
+      return;
+    }
+    this.loading = true;
+    this.error = '';
+
+    this.auth.login(this.email, this.password).subscribe({
+      next: (user) => {
+        this.loading = false;
+        if (user.rol === 'admin') this.router.navigate(['/admin']);
+        else if (user.rol === 'gov') this.router.navigate(['/gov']);
+        else this.router.navigate(['/home']);
+      },
+      error: () => {
+        this.loading = false;
+        this.error = 'Correo o contrasena incorrectos.';
+      },
+    });
   }
 }
