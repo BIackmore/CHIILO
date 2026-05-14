@@ -8,7 +8,7 @@
     /* Modules */
     "module": "commonjs",
     "moduleResolution": "node",
-    "rootDir": "./src",
+    "rootDir": ".",
     "outDir": "./dist",
 
     /* Interop Constraints */
@@ -29,6 +29,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*", "types/**/*.d.ts"],
+  "include": ["src/**/*", "types/**/*.d.ts", "scripts/**/*"],
   "exclude": ["node_modules"]
 }

@@ -4,7 +4,8 @@
   "description": "REST API – Sistema de Detección de Incendios Forestales",
   "scripts": {
     "dev": "tsx --watch src/index.ts",
-    "start": "tsx src/index.ts"
+    "start": "tsx src/index.ts",
+    "migrate": "tsx scripts/migrate.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
