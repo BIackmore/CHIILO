@@ -1,0 +1,187 @@
+<app-gov-navbar *ngIf="userType==='gov'"></app-gov-navbar>
+<app-navbar *ngIf="userType!=='gov'"></app-navbar>
+
+<main class="result-main">
+  <div class="result-header">
+    <button class="btn-back" (click)="goBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      Volver
+    </button>
+    <div>
+      <h1>Resultado del Análisis</h1>
+      <p>Análisis completado por el modelo FireDetection-v2.3</p>
+    </div>
+  </div>
+
+  <div class="result-grid">
+    <div class="hist-empty" *ngIf="loading || error" style="grid-column: 1 / -1; margin-bottom: 0;">
+      <div class="empty-icon" *ngIf="loading">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--fog)" stroke-width="1.5" width="44" height="44">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+      </div>
+      <div class="empty-icon" *ngIf="error">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--fog)" stroke-width="1.5" width="44" height="44">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <p>{{ loading ? 'Cargando resultado del analisis...' : error }}</p>
+    </div>
+
+    <ng-container *ngIf="!loading && !error">
+    <!-- Left column -->
+    <div class="left-col">
+
+      <!-- Risk level card -->
+      <div class="risk-card" [class.risk-alto]="result.nivel==='Alto'" [class.risk-medio]="result.nivel==='Medio'" [class.risk-bajo]="result.nivel==='Bajo'">
+        <div class="risk-top">
+          <div class="risk-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="white" width="28" height="28">
+              <path d="M12 2C8.5 7 6 9.5 6 13a6 6 0 0012 0c0-3.5-2.5-6-6-11z"/>
+            </svg>
+          </div>
+          <div>
+            <p class="risk-label">Nivel de Riesgo Detectado</p>
+            <p class="risk-level">Riesgo {{ result.nivel }}</p>
+          </div>
+          <span class="risk-badge">{{ result.nivel }}</span>
+        </div>
+
+        <div class="confidence-section">
+          <div class="conf-row">
+            <span>Confianza del modelo</span>
+            <strong>{{ result.confianza }}%</strong>
+          </div>
+          <div class="conf-bar-bg">
+            <div class="conf-bar" [style.width]="result.confianza+'%'"></div>
+          </div>
+        </div>
+
+        <div class="risk-meta">
+          <div class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" width="14" height="14"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 00-8 8c0 5.4 7.05 12.6 7.93 13.42a1 1 0 001.14 0C13.95 22.6 21 15.4 21 10a8 8 0 00-8-8z"/></svg>
+            {{ result.zona }}
+          </div>
+          <div class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            {{ result.fecha }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Heatmap placeholder -->
+      <div class="heatmap-card">
+        <h3>Mapa de Calor Generado</h3>
+        <p class="card-sub">Zonas resaltadas por nivel de riesgo</p>
+        <div class="heatmap-area">
+          <div class="heatmap-grid"></div>
+          <div class="heat-zone high" style="top:20%;left:30%;width:120px;height:80px;"></div>
+          <div class="heat-zone medium" style="top:50%;left:55%;width:90px;height:70px;"></div>
+          <div class="heat-zone low" style="top:65%;left:20%;width:70px;height:55px;"></div>
+          <div class="heatmap-legend">
+            <div class="hl-item"><span class="hl-dot" style="background:#ef4444"></span>Alto</div>
+            <div class="hl-item"><span class="hl-dot" style="background:#f97316"></span>Medio</div>
+            <div class="hl-item"><span class="hl-dot" style="background:#eab308"></span>Bajo</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image metadata -->
+      <div class="meta-card">
+        <h3>Información de la Imagen</h3>
+        <div class="meta-rows">
+          <div class="meta-row"><span>Resolución</span><span>{{ result.resolucion }}</span></div>
+          <div class="meta-row"><span>Tamaño</span><span>{{ result.tamano }}</span></div>
+          <div class="meta-row"><span>Modelo usado</span><span>FireDetection-v2.3</span></div>
+          <div class="meta-row"><span>Tiempo de análisis</span><span>1.8s</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right column -->
+    <div class="right-col">
+
+      <!-- Risk factors -->
+      <div class="factors-card">
+        <h3>Factores de Riesgo Detectados</h3>
+        <p class="card-sub">Variables que contribuyen al nivel de riesgo</p>
+        <div class="factors-list">
+          <div *ngFor="let f of result.factores" class="factor-item">
+            <div class="factor-header">
+              <span>{{ f.label }}</span>
+              <span class="factor-pct" [style.color]="f.color">{{ f.valor }}%</span>
+            </div>
+            <div class="factor-bar-bg">
+              <div class="factor-bar" [style.width]="f.valor+'%'" [style.background]="f.color"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommendations -->
+      <div class="rec-card">
+        <h3>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" width="18" height="18">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          Recomendaciones
+        </h3>
+        <ul class="rec-list">
+          <li *ngFor="let r of result.recomendaciones">
+            <span class="rec-dot"></span>
+            {{ r }}
+          </li>
+        </ul>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions-card">
+        <h3>Acciones</h3>
+        <div class="action-btns">
+          <button class="btn-action primary" (click)="analyzeAnother()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Analizar otra imagen
+          </button>
+          <button class="btn-action download">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Descargar Reporte PDF
+          </button>
+          <button *ngIf="userType==='gov'" class="btn-action gov-report">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            Generar Reporte Oficial
+          </button>
+        </div>
+      </div>
+
+      <!-- Gov note -->
+      <div *ngIf="userType==='gov'" class="gov-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" width="18" height="18">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <p>Este análisis ha sido registrado automáticamente en la bitácora gubernamental. Puedes generar un reporte oficial para compartirlo con Protección Civil.</p>
+      </div>
+
+    </div>
+    </ng-container>
+  </div>
+</main>

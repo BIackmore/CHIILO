@@ -1,0 +1,130 @@
+<app-navbar></app-navbar>
+
+<div class="dash-page">
+
+  <!-- Sub-tabs -->
+  <div class="sub-tabs">
+    <div class="sub-tabs-inner">
+      <button [class.active]="activeTab==='dashboard'" (click)="setTab('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button [class.active]="activeTab==='alertas'" (click)="setTab('alertas')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Alertas
+      </button>
+      <button [class.active]="activeTab==='estadisticas'" (click)="setTab('estadisticas')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Estadísticas
+      </button>
+      <button [class.active]="activeTab==='incendios'" (click)="setTab('incendios')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Incendios Activos
+      </button>
+    </div>
+  </div>
+
+  <!-- Dashboard content -->
+  <div class="dash-content" *ngIf="activeTab==='dashboard'">
+
+    <div class="tab-placeholder" *ngIf="loading || error" style="min-height: 220px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--fog)" stroke-width="1.5" width="48" height="48"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      <p>{{ loading ? 'Cargando dashboard...' : error }}</p>
+    </div>
+
+    <div class="main-grid" *ngIf="!loading && !error">
+      <!-- MAP -->
+      <div class="map-card">
+        <h3 class="card-title">Mapa de Detección</h3>
+        <div class="map-area">
+          <div class="map-grid-lines"></div>
+          <div class="fire-pin low"    style="top:28%;left:30%"><svg viewBox="0 0 24 24" fill="white" width="14" height="14"><path d="M12 2C8.5 7 6 9.5 6 13a6 6 0 0012 0c0-3.5-2.5-6-6-11z"/></svg></div>
+          <div class="fire-pin high"   style="top:50%;left:62%"><svg viewBox="0 0 24 24" fill="white" width="14" height="14"><path d="M12 2C8.5 7 6 9.5 6 13a6 6 0 0012 0c0-3.5-2.5-6-6-11z"/></svg></div>
+          <div class="fire-pin critic" style="top:68%;left:50%"><svg viewBox="0 0 24 24" fill="white" width="14" height="14"><path d="M12 2C8.5 7 6 9.5 6 13a6 6 0 0012 0c0-3.5-2.5-6-6-11z"/></svg></div>
+          <div class="map-legend">
+            <p class="legend-title">Nivel de Severidad</p>
+            <div class="legend-row"><span class="ldot low"></span>Bajo</div>
+            <div class="legend-row"><span class="ldot medium"></span>Medio</div>
+            <div class="legend-row"><span class="ldot high"></span>Alto</div>
+            <div class="legend-row"><span class="ldot critic"></span>Crítico</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIDE PANELS -->
+      <div class="side-panels">
+        <!-- Risk gauge -->
+        <div class="risk-card">
+          <h3 class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2" width="16" height="16"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+            Nivel de Riesgo
+          </h3>
+          <div class="gauge-wrap">
+            <div class="gauge-svg">
+              <svg viewBox="0 0 120 120" width="150" height="150">
+                <circle cx="60" cy="60" r="50" fill="none" stroke="var(--surface-3)" stroke-width="11"/>
+                <circle cx="60" cy="60" r="50" fill="none" stroke="var(--ember)" stroke-width="11"
+                  stroke-dasharray="222 314" stroke-dashoffset="78"
+                  stroke-linecap="round" transform="rotate(-90 60 60)"/>
+              </svg>
+              <div class="gauge-center">
+                <span class="gauge-val">72%</span>
+                <span class="gauge-lbl">Riesgo</span>
+              </div>
+            </div>
+            <div class="risk-tag">⚠ Alto riesgo de incendio</div>
+          </div>
+
+          <div class="factors-title">Factores de Riesgo</div>
+          <div *ngFor="let f of riskFactors" class="factor-item">
+            <div class="factor-row-top">
+              <div class="factor-label">
+                <svg *ngIf="f.icon==='temp'"  viewBox="0 0 24 24" fill="none" stroke="var(--ember)" stroke-width="2" width="13" height="13"><path d="M14 14.76V3.5a2.5 2.5 0 00-5 0v11.26a4.5 4.5 0 105 0z"/></svg>
+                <svg *ngIf="f.icon==='humid'" viewBox="0 0 24 24" fill="none" stroke="var(--info)"  stroke-width="2" width="13" height="13"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
+                <svg *ngIf="f.icon==='wind'"  viewBox="0 0 24 24" fill="none" stroke="var(--fog)"   stroke-width="2" width="13" height="13"><path d="M9.59 4.59A2 2 0 1111 8H2m10.59 11.41A2 2 0 1014 16H2"/></svg>
+                {{ f.label }}
+              </div>
+              <span class="factor-pct">{{ f.value }}%</span>
+            </div>
+            <div class="factor-bar-bg"><div class="factor-bar" [style.width.%]="f.value" [style.background]="f.color"></div></div>
+          </div>
+        </div>
+
+        <!-- Weather -->
+        <div class="weather-card">
+          <h3 class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" width="15" height="15"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg>
+            Condiciones Meteorológicas
+          </h3>
+          <div class="weather-grid">
+            <div class="wx-item"><span>Temperatura</span><strong>{{ weather.temp }}</strong></div>
+            <div class="wx-item"><span>Humedad</span><strong>{{ weather.humidity }}</strong></div>
+            <div class="wx-item"><span>Viento</span><strong>{{ weather.wind }}</strong></div>
+            <div class="wx-item"><span>Presión</span><strong>{{ weather.pressure }}</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="stats-row" *ngIf="!loading && !error">
+      <div *ngFor="let s of stats" class="stat-card">
+        <div class="sc-icon" [style.background]="s.bg">
+          <svg *ngIf="s.icon==='fire'"  viewBox="0 0 24 24" fill="none" [attr.stroke]="s.color" stroke-width="2" width="20" height="20"><path d="M12 2C8.5 7 6 9.5 6 13a6 6 0 0012 0c0-3.5-2.5-6-6-11z"/></svg>
+          <svg *ngIf="s.icon==='alert'" viewBox="0 0 24 24" fill="none" [attr.stroke]="s.color" stroke-width="2" width="20" height="20"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          <svg *ngIf="s.icon==='check'" viewBox="0 0 24 24" fill="none" [attr.stroke]="s.color" stroke-width="2" width="20" height="20"><polyline points="20 6 9 17 4 12"/></svg>
+          <svg *ngIf="s.icon==='trend'" viewBox="0 0 24 24" fill="none" [attr.stroke]="s.color" stroke-width="2" width="20" height="20"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+        </div>
+        <div class="sc-val" [style.color]="s.color">{{ s.value }}</div>
+        <div class="sc-label">{{ s.label }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Other tabs placeholder -->
+  <div *ngIf="activeTab!=='dashboard'" class="tab-placeholder">
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--fog)" stroke-width="1.5" width="48" height="48"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+    <p>Sección en construcción</p>
+  </div>
+
+</div>

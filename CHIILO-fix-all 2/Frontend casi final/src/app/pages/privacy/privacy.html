@@ -1,0 +1,116 @@
+<div class="privacy-page">
+  <button class="corner-theme" (click)="theme.toggle()" [title]="theme.isDark ? 'Modo claro' : 'Modo oscuro'">
+    <svg *ngIf="theme.isDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg *ngIf="!theme.isDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+  </button>
+
+  <div class="privacy-wrap">
+    <div class="privacy-header">
+      <div class="privacy-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div>
+        <h1>Aviso de Privacidad</h1>
+        <p>Sistema de Prevención de Incendios – Tepoztlán, Morelos</p>
+      </div>
+    </div>
+
+    <div class="privacy-body">
+      <div class="meta-row">
+        <span>Última actualización: Noviembre 2025</span>
+        <span>Versión 1.0</span>
+      </div>
+
+      <div class="intro-box">
+        <p>De conformidad con lo establecido en la <strong>Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP)</strong> y demás normativa aplicable, el Sistema de Prevención de Incendios de Tepoztlán, Morelos, pone a su disposición el presente Aviso de Privacidad.</p>
+      </div>
+
+      <section class="privacy-section">
+        <h2><span class="sec-num">1</span> Responsable del tratamiento</h2>
+        <p>El responsable del tratamiento de sus datos personales es el <strong>Proyecto de Detección de Zonas con Riesgo de Incendios</strong>, con sede en Tepoztlán, Morelos, México. Para cualquier consulta sobre el tratamiento de sus datos puede contactarnos a través de los canales indicados en este aviso.</p>
+      </section>
+
+      <section class="privacy-section">
+        <h2><span class="sec-num">2</span> Datos personales que recabamos</h2>
+        <p>Para los fines descritos en este aviso, recabamos las siguientes categorías de datos personales:</p>
+        <ul>
+          <li><strong>Datos de identificación:</strong> nombre completo, correo electrónico.</li>
+          <li><strong>Datos laborales</strong> (solo usuarios gubernamentales): número de trabajador o ficha, dependencia, cargo y organización.</li>
+          <li><strong>Datos de uso:</strong> imágenes satelitales o aéreas cargadas para análisis, historial de análisis, fecha y hora de acceso.</li>
+          <li><strong>Datos técnicos:</strong> dirección IP, tipo de navegador y sistema operativo (con fines de seguridad).</li>
+        </ul>
+        <p>No recabamos datos sensibles ni datos de menores de edad.</p>
+      </section>
+
+      <section class="privacy-section">
+        <h2><span class="sec-num">3</span> Finalidades del tratamiento</h2>
+        <p><strong>Finalidades primarias</strong> (necesarias para la prestación del servicio):</p>
+        <ul>
+          <li>Autenticar y gestionar su cuenta de usuario.</li>
+          <li>Procesar y analizar imágenes satelitales para la detección de riesgo de incendio.</li>
+          <li>Generar reportes de zonas de riesgo y ponerlos a disposición de autoridades.</li>
+          <li>Mantener el historial de análisis realizados.</li>
+          <li>Garantizar la seguridad e integridad del sistema.</li>
+        </ul>
+        <p><strong>Finalidades secundarias</strong> (puede oponerse):</p>
+        <ul>
+          <li>Elaboración de estadísticas agregadas sobre el uso del sistema.</li>
+          <li>Mejora continua del modelo de inteligencia artificial.</li>
+        </ul>
+      </section>
+
+      <section class="privacy-section">
+        <h2><span class="sec-num">4</span> Transferencia de datos</h2>
+        <p>Sus datos personales podrán ser compartidos con:</p>
+        <ul>
+          <li>Autoridades de Protección Civil y dependencias gubernamentales del estado de Morelos, cuando sea necesario para atender una emergencia o incidente de incendio.</li>
+          <li>Proveedores de servicios tecnológicos que actúan como encargados del tratamiento, bajo acuerdos de confidencialidad.</li>
+          <li>Autoridades competentes, cuando así lo exija la ley.</li>
+        </ul>
+        <p>No vendemos ni cedemos sus datos a terceros con fines comerciales.</p>
+      </section>
+
+      <section class="privacy-section">
+        <h2><span class="sec-num">5</span> Derechos ARCO</h2>
+        <p>Usted tiene derecho a <strong>Acceder, Rectificar, Cancelar u Oponerse</strong> al tratamiento de sus datos personales (derechos ARCO). Para ejercerlos puede contactarnos indicando:</p>
+        <ul>
+          <li>Nombre completo y correo electrónico registrado.</li>
+          <li>Descripción clara del derecho que desea ejercer.</li>
+          <li>Documentación que acredite su identidad.</li>
+        </ul>
+        <p>Responderemos a su solicitud en un plazo máximo de <strong>20 días hábiles</strong>.</p>
+      </section>
+
+      <section class="privacy-section">
+        <h2><span class="sec-num">6</span> Seguridad de los datos</h2>
+        <p>Implementamos medidas técnicas, administrativas y físicas para proteger sus datos personales contra pérdida, uso no autorizado, alteración o divulgación, incluyendo cifrado en tránsito, control de acceso por roles y registros de auditoría.</p>
+      </section>
+
+      <section class="privacy-section">
+        <h2><span class="sec-num">7</span> Retención de datos</h2>
+        <p>Sus datos serán conservados mientras su cuenta permanezca activa o durante el tiempo necesario para cumplir con las finalidades del tratamiento y las obligaciones legales aplicables. Al solicitar la eliminación de su cuenta, procederemos a suprimir o anonimizar sus datos en un plazo de 30 días naturales.</p>
+      </section>
+
+      <section class="privacy-section">
+        <h2><span class="sec-num">8</span> Cambios al aviso</h2>
+        <p>Cualquier modificación a este Aviso de Privacidad será notificada a través del sistema y, cuando sea posible, por correo electrónico. La versión vigente siempre estará disponible en esta página.</p>
+      </section>
+
+      <div class="privacy-footer-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span>Tepoztlán, Morelos, México · Sistema de Prevención de Incendios · 2025</span>
+      </div>
+    </div>
+
+    <div class="privacy-actions">
+      <a routerLink="/login" class="btn-ember">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="15 18 9 12 15 6"/></svg>
+        Volver al inicio de sesión
+      </a>
+      <button class="btn-ghost" onclick="window.print()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Imprimir
+      </button>
+    </div>
+  </div>
+</div>
