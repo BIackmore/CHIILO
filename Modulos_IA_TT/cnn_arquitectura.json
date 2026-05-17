@@ -1,0 +1,50 @@
+[
+    {
+        "type": "Conv2D",
+        "in_channels": 3,
+        "out_channels": 16,
+        "kernel": 3
+    },
+    {
+        "type": "ReLU"
+    },
+    {
+        "type": "MaxPool2D",
+        "pool_size": 2,
+        "stride": 2
+    },
+    {
+        "type": "Conv2D",
+        "in_channels": 16,
+        "out_channels": 32,
+        "kernel": 3
+    },
+    {
+        "type": "ReLU"
+    },
+    {
+        "type": "MaxPool2D",
+        "pool_size": 2,
+        "stride": 2
+    },
+    {
+        "type": "Flatten"
+    },
+    {
+        "type": "Dense",
+        "shape": [
+            64,
+            100352
+        ]
+    },
+    {
+        "type": "ReLU"
+    },
+    {
+        "type": "Dense",
+        "shape": [
+            3,
+            64
+        ]
+    }
+]

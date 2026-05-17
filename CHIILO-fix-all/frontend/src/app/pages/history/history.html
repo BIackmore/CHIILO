@@ -1,0 +1,77 @@
+<app-navbar></app-navbar>
+
+<div class="page-centered">
+  <div class="page-inner-sm">
+    <div class="hist-header">
+      <h1>Historial de Análisis</h1>
+      <p>Revisa los análisis realizados anteriormente.</p>
+    </div>
+
+    <div class="hist-empty" *ngIf="loading">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--fog)" stroke-width="1.5" width="44" height="44">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+      </div>
+      <p>Cargando historial...</p>
+    </div>
+
+    <div class="hist-empty" *ngIf="!loading && error">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--fog)" stroke-width="1.5" width="44" height="44">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <p>{{ error }}</p>
+    </div>
+
+    <div class="tbl-wrap" *ngIf="!loading && analyses.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>Imagen</th>
+            <th>Usuario</th>
+            <th>Zona</th>
+            <th>Riesgo</th>
+            <th>Confianza</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let analysis of analyses">
+            <td><strong>{{ analysis.imagen }}</strong></td>
+            <td>{{ analysis.usuario }}</td>
+            <td>{{ analysis.zonas_detectadas ? 'Geometria disponible' : 'Segun resultado' }}</td>
+            <td><span class="badge" [class]="getBadgeClass(analysis.nivel_riesgo)">{{ analysis.nivel_riesgo }}</span></td>
+            <td>{{ analysis.confianza }}%</td>
+            <td class="muted-text">{{ analysis.fecha }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="hist-empty" *ngIf="!loading && !error && analyses.length === 0">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--fog)" stroke-width="1.5" width="44" height="44">
+          <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+      </div>
+      <p>Aún no se ha procesado ninguna imagen.</p>
+      <a routerLink="/process-image" class="btn-ember">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        Analizar la primera imagen
+      </a>
+    </div>
+  </div>
+</div>
+
+<footer class="hist-footer">
+  © 2026 Proyecto de Detección de Zonas con Riesgo de Incendios
+</footer>

@@ -1,0 +1,87 @@
+<div class="shell" (click)="closeProfile($event)">
+
+  <!-- TOPBAR -->
+  <header class="topbar" [class]="accentClass">
+    <div class="topbar-brand">
+      <div class="topbar-flame">
+        <svg viewBox="0 0 28 36" fill="none" width="20" height="26">
+          <path d="M14 1C9 10 5 14 5 19a9 9 0 0018 0c0-5-3.5-9-9-18z" fill="url(#stf)"/>
+          <path d="M14 12C11 17 10 19 10 21a4 4 0 008 0c0-2-2-4-4-9z" fill="rgba(255,220,120,0.9)"/>
+          <defs><linearGradient id="stf" x1="14" y1="1" x2="14" y2="36" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FFAB76"/><stop offset="1" stop-color="#C0390D"/>
+          </linearGradient></defs>
+        </svg>
+      </div>
+      <div>
+        <p class="topbar-title">{{ title }}</p>
+        <p class="topbar-sub">{{ subtitle }}</p>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <!-- Theme toggle -->
+      <button class="topbar-theme" (click)="theme.toggle()" [title]="theme.isDark ? 'Modo claro' : 'Modo oscuro'">
+        <svg *ngIf="theme.isDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <svg *ngIf="!theme.isDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+        </svg>
+      </button>
+
+      <!-- Profile -->
+      <div class="profile-area" (click)="$event.stopPropagation(); toggleProfile()">
+        <div class="avatar" [class]="accentClass+'-av'">{{ userInitials }}</div>
+
+        <div class="profile-drop" *ngIf="showProfile" (click)="$event.stopPropagation()">
+          <div class="pd-top">
+            <div class="pd-avatar" [class]="accentClass+'-av'">{{ userInitials }}</div>
+            <div>
+              <p class="pd-name">{{ user?.nombre }}</p>
+              <p class="pd-email">{{ user?.correo }}</p>
+              <span class="badge b-neutral" style="font-size:0.66rem">
+                {{ user?.rol === 'admin' ? 'Administrador' : user?.rol === 'gov' ? 'Gubernamental' : 'Usuario' }}
+              </span>
+            </div>
+          </div>
+          <div *ngIf="user?.organizacion" class="pd-org">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            {{ user?.organizacion }}
+          </div>
+          <button class="pd-logout" (click)="logout()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
+
+      <button class="topbar-logout" (click)="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar Sesión
+      </button>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <nav class="shell-tabs">
+    <div class="tabs-row">
+      <button *ngFor="let item of navItems"
+        class="tab-btn"
+        [class.active]="activeTab === item.tab"
+        [attr.data-accent]="accentClass"
+        (click)="setTab(item.tab)">
+        <span [innerHTML]="item.icon"></span>
+        {{ item.label }}
+      </button>
+    </div>
+  </nav>
+
+  <!-- CONTENT -->
+  <main class="shell-body">
+    <ng-content></ng-content>
+  </main>
+</div>

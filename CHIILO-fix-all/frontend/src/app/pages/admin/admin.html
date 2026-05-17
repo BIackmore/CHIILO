@@ -1,0 +1,477 @@
+<app-shell
+  [activeTab]="activeTab"
+  [navItems]="navItems"
+  title="Panel de Administrador"
+  subtitle="Sistema de Prevención de Incendios – Tepoztlán"
+  accentClass="accent-ember"
+  (tabChange)="activeTab=$event">
+
+  <div class="modal-error" *ngIf="error" style="margin-bottom: 16px;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    {{ error }}
+  </div>
+
+  <div class="modal-success" *ngIf="loading" style="margin-bottom: 16px;">
+    <span class="spinner"></span>
+    Cargando informacion del panel...
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       GESTIÓN + HISTORIAL DE USUARIOS
+  ═══════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab==='usuarios'">
+
+    <div class="sec-head">
+      <div>
+        <h2>Gestión de Usuarios</h2>
+        <p>Administra cuentas del sistema — crea usuarios gubernamentales y revisa el historial de actividad</p>
+      </div>
+      <div class="sec-actions">
+        <button class="btn-ghost" (click)="showHistorial=!showHistorial">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          {{ showHistorial ? 'Ver Usuarios' : 'Historial de Actividad' }}
+        </button>
+        <button class="btn-ember" (click)="openModal()" *ngIf="!showHistorial">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          Nuevo Usuario Gubernamental
+        </button>
+      </div>
+    </div>
+
+    <!-- ─── TABLA DE USUARIOS ─── -->
+    <ng-container *ngIf="!showHistorial">
+      <div class="search-wrap">
+        <svg class="s-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input [(ngModel)]="search" placeholder="Buscar por nombre, correo, organización o N° trabajador..." />
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Correo</th>
+              <th>Organización / Dependencia</th>
+              <th>N° Trabajador</th>
+              <th>Cargo</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th>Registro</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of filteredUsers">
+              <td>
+                <div class="user-cell">
+                  <div class="user-avatar" [class]="u.rol==='gov' ? 'av-gov' : 'av-user'">
+                    {{ u.nombre.charAt(0).toUpperCase() }}
+                  </div>
+                  <strong>{{ u.nombre }}</strong>
+                </div>
+              </td>
+              <td class="muted-text">{{ u.correo }}</td>
+              <td>
+                <div *ngIf="u.organizacion" class="org-cell">
+                  <span class="org-name">{{ u.organizacion }}</span>
+                  <span *ngIf="u.dependencia" class="dep-name">{{ u.dependencia }}</span>
+                </div>
+                <span *ngIf="!u.organizacion" class="muted-text">—</span>
+              </td>
+              <td>
+                <span *ngIf="u.numTrabajador" class="num-badge">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+                  {{ u.numTrabajador }}
+                </span>
+                <span *ngIf="!u.numTrabajador" class="muted-text">—</span>
+              </td>
+              <td class="muted-text">{{ u.cargo || '—' }}</td>
+              <td>
+                <span class="badge" [class]="u.rol==='gov' ? 'b-ok' : 'b-info'">
+                  {{ u.rol==='gov' ? 'Gubernamental' : 'Usuario' }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" [class]="u.estado==='activo' ? 'b-ok' : u.estado==='inactivo' ? 'b-danger' : 'b-warn'">
+                  {{ u.estado === 'activo' ? '● Activo' : u.estado === 'inactivo' ? '● Inactivo' : '⏳ Pendiente' }}
+                </span>
+              </td>
+              <td class="muted-text" style="font-size:0.77rem">{{ u.fechaCreacion || '—' }}</td>
+              <td>
+                <div class="row-actions">
+                  <button class="ico-btn ico-toggle" [title]="u.estado==='activo' ? 'Desactivar' : 'Activar'" (click)="toggleEstado(u)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M18.36 6.64a9 9 0 11-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                  </button>
+                  <button class="ico-btn ico-del" title="Eliminar" (click)="deleteUser(u.correo)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="filteredUsers.length===0">
+              <td colspan="9" class="empty-cell">No se encontraron usuarios</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tbl-footer">
+        <div class="tf-left">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" width="14" height="14"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <span class="muted-text">Total:</span>
+          <strong>{{ filteredUsers.length }}</strong>
+        </div>
+        <div class="tf-chips">
+          <span class="tf-chip gov">{{ filteredUsers | countBy:'rol':'gov' }} gubernamentales</span>
+          <span class="tf-chip usr">{{ filteredUsers | countBy:'rol':'user' }} comunes</span>
+          <span class="tf-chip act">{{ filteredUsers | countBy:'estado':'activo' }} activos</span>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ─── HISTORIAL DE ACTIVIDAD ─── -->
+    <ng-container *ngIf="showHistorial">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Usuario</th><th>Acción realizada</th><th>Fecha y Hora</th><th>IP</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let h of historialActividad">
+              <td><strong style="color:var(--snow)">{{ h.usuario }}</strong></td>
+              <td>{{ h.accion }}</td>
+              <td class="muted-text">{{ h.fecha }}</td>
+              <td class="muted-text" style="font-family:monospace;font-size:0.78rem">{{ h.ip }}</td>
+            </tr>
+            <tr *ngIf="historialActividad.length===0">
+              <td colspan="4" class="empty-cell">No hay actividad registrada</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+
+  </ng-container>
+
+  <!-- ═══════════════════════════════════════════
+       BITÁCORA + DESCARGA
+  ═══════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab==='bitacora'">
+    <div class="sec-head">
+      <div><h2>Bitácora & Descarga de Reportes</h2><p>Visualiza reportes del sistema y descarga archivos guardados</p></div>
+      <button class="btn-ember"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/></svg>Exportar Todo</button>
+    </div>
+    <div class="four-cols mb-20">
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(255,61,61,0.12)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" width="18" height="18"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div><div class="sc-val danger-text">{{ repAlta }}</div><div class="sc-label">Severidad Alta</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(255,152,0,0.12)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2" width="18" height="18"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div><div class="sc-val warn-text">{{ repMedia }}</div><div class="sc-label">Severidad Media</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(167,139,250,0.12)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="sc-val" style="color:var(--purple)">{{ repProc }}</div><div class="sc-label">En Proceso</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(56,189,248,0.12)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" width="18" height="18"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/></svg></div><div class="sc-val info-text">{{ reportes.length }}</div><div class="sc-label">Total Reportes</div></div>
+    </div>
+    <div class="search-wrap"><svg class="s-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input [(ngModel)]="bSearch" placeholder="Buscar por ubicación, tipo o usuario..." /></div>
+    <div class="tbl-wrap mb-20">
+      <table>
+        <thead><tr><th>ID</th><th>Tipo</th><th>Ubicación</th><th>Severidad</th><th>Usuario</th><th>Fecha</th><th>Estado</th><th></th></tr></thead>
+        <tbody>
+          <tr *ngFor="let r of filteredReportes">
+            <td class="muted-text">#{{ r.id }}</td>
+            <td style="color:var(--snow);font-weight:500">{{ r.tipo }}</td>
+            <td>{{ r.ubicacion }}</td>
+            <td><span class="badge" [class]="r.sev==='Alta'?'b-danger':r.sev==='Media'?'b-warn':'b-ok'">{{ r.sev }}</span></td>
+            <td>{{ r.usuario }}</td>
+            <td class="muted-text" style="font-size:0.78rem">{{ r.fecha }}</td>
+            <td><span class="badge" [class]="r.estado==='Atendido'||r.estado==='Completado'?'b-ok':r.estado==='En Proceso'?'b-purple':'b-neutral'">{{ r.estado }}</span></td>
+            <td><button class="ico-btn ico-edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button></td>
+          </tr>
+          <tr *ngIf="filteredReportes.length===0">
+            <td colspan="8" class="empty-cell">No hay reportes disponibles</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="sec-head compact mb-12"><h2>Archivos Descargables</h2></div>
+    <div class="archivos-list">
+      <div *ngFor="let a of archivos" class="archivo-item">
+        <div class="archivo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="18" height="18"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="archivo-info"><p class="archivo-nombre">{{ a.nombre }}</p><p class="archivo-meta">{{ a.size }} · {{ a.formato }} · {{ a.fecha }}</p></div>
+        <div class="archivo-actions"><span class="badge b-ok">✓ Disponible</span><button class="btn-ember" style="padding:7px 14px;font-size:0.8rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/></svg>Descargar</button></div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ═══════════════════════════════════════════
+       HISTORIAL DE IMÁGENES
+  ═══════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab==='imagenes'">
+    <div class="sec-head"><div><h2>Historial de Imágenes</h2><p>Imágenes procesadas por el sistema</p></div><button class="btn-ember" (click)="exportImagenes()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/></svg>Exportar</button></div>
+    <div class="img-grid">
+      <div *ngFor="let img of imagenes" class="img-card">
+        <div class="img-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="var(--smoke)" stroke-width="1.5" width="40" height="40"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+        <div class="img-body">
+          <div class="img-header"><p class="img-name">{{ img.nombre }}</p><span class="badge" [class]="img.color">{{ img.resultado }}</span></div>
+          <p class="muted-text" style="font-size:0.78rem;margin-bottom:12px">{{ img.zona }} · {{ img.confianza }}% confianza</p>
+          <div class="img-details">
+            <div class="detail-row"><span>Resolución</span><span>{{ img.resolucion }}</span></div>
+            <div class="detail-row"><span>Tamaño</span><span>{{ img.tamano }}</span></div>
+            <div class="detail-row"><span>Usuario</span><span>{{ img.usuario }}</span></div>
+            <div class="detail-row"><span>Fecha</span><span>{{ img.fecha }}</span></div>
+          </div>
+          <div class="img-btns">
+            <button class="btn-ghost" style="flex:1;justify-content:center;padding:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver</button>
+            <button class="btn-ghost" style="flex:1;justify-content:center;padding:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/></svg>Descargar</button>
+            <button class="ico-btn ico-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="empty-cell" *ngIf="imagenes.length===0">No hay imagenes registradas</div>
+    </div>
+  </ng-container>
+
+  <!-- ═══════════════════════════════════════════
+       DETALLES DE ZONAS
+  ═══════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab==='zonas'">
+    <div class="sec-head"><div><h2>Detalles de Zonas de Monitoreo</h2><p>Información en tiempo real de cada zona vigilada</p></div></div>
+    <div class="zonas-grid">
+      <div *ngFor="let z of zonas" class="zona-card">
+        <div class="zona-card-header"><div><p class="zona-name">{{ z.nombre }}</p><p class="muted-text" style="font-size:0.75rem">Área: {{ z.area }} · Últ. act.: {{ z.upd }}</p></div><span class="badge" [class]="z.rColor">{{ z.riesgo }} Riesgo</span></div>
+        <div class="zona-clima">
+          <div class="zc-item"><svg viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" width="14" height="14"><path d="M14 14.76V3.5a2.5 2.5 0 00-5 0v11.26a4.5 4.5 0 105 0z"/></svg><span>Temp.</span><strong>{{ z.temp }}</strong></div>
+          <div class="zc-item"><svg viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" width="14" height="14"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg><span>Humedad</span><strong>{{ z.hum }}</strong></div>
+          <div class="zc-item"><svg viewBox="0 0 24 24" fill="none" stroke="var(--fog)" stroke-width="2" width="14" height="14"><path d="M9.59 4.59A2 2 0 1111 8H2m10.59 11.41A2 2 0 1014 16H2"/></svg><span>Viento</span><strong>{{ z.viento }}</strong></div>
+        </div>
+        <div class="zona-inc"><svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2" width="13" height="13"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg><span>Incidentes registrados</span><strong>{{ z.inc }}</strong></div>
+        <button class="btn-ember" style="width:100%;justify-content:center">Ver Detalles Completos</button>
+      </div>
+      <div class="empty-cell" *ngIf="zonas.length===0">No hay zonas detectadas aun</div>
+    </div>
+  </ng-container>
+
+  <!-- ═══════════════════════════════════════════
+       MODELO DE IA
+  ═══════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab==='ia'">
+    <div class="sec-head"><div><h2>Modelo de IA en Producción</h2><p>Gestiona el modelo de detección activo</p></div></div>
+    <div class="card card-padded mb-20">
+      <div class="modelo-active-top">
+        <div class="modelo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="22" height="22"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
+        <div><p class="modelo-name">{{ modeloActivo.nombre }}</p><p class="muted-text">v{{ modeloActivo.version }}</p></div>
+        <span class="badge b-ok ml-auto">✓ Activo</span>
+      </div>
+      <div class="three-cols mb-16">
+        <div class="m-stat"><span>Precisión</span><strong class="ok-text">{{ modeloActivo.precision }}%</strong></div>
+        <div class="m-stat"><span>Detecciones</span><strong>{{ modeloActivo.detecciones }}</strong></div>
+        <div class="m-stat"><span>Actualizado</span><strong>{{ modeloActivo.actualizacion }}</strong></div>
+      </div>
+      <div class="prog-wrap"><div class="prog-head"><span>Precisión del Modelo</span><span class="ok-text">{{ modeloActivo.precision }}%</span></div><div class="prog-bg"><div class="prog-fill" style="background:var(--ok)" [style.width]="modeloActivo.precision+'%'"></div></div></div>
+    </div>
+    <div class="sec-head compact mb-12"><h2>Modelos Disponibles</h2></div>
+    <div class="modelos-list mb-20">
+      <div *ngFor="let m of modelos" class="modelo-item">
+        <div><div class="modelo-item-top"><span class="modelo-item-name">{{ m.nombre }}</span><span class="badge" [class]="m.tagC">{{ m.tag }}</span></div><p class="muted-text" style="font-size:0.78rem">v{{ m.version }} · {{ m.precision }}% precisión · {{ m.tamano }} · {{ m.fecha }}</p></div>
+        <div class="modelo-item-actions"><button class="btn-ghost">Descargar</button><button class="btn-ember" style="padding:8px 16px;font-size:0.82rem">Actualizar</button></div>
+      </div>
+    </div>
+    <div class="sec-head compact mb-12"><h2>Cargar Modelo Personalizado</h2></div>
+    <div class="upload-model">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--fog)" stroke-width="1.5" width="40" height="40"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <p style="color:var(--snow);font-weight:600">Arrastra y suelta tu modelo aquí</p>
+      <p class="muted-text" style="font-size:0.8rem">Formatos: .h5, .pb, .onnx (máx. 500 MB)</p>
+      <button class="btn-ember">Seleccionar Archivo</button>
+    </div>
+  </ng-container>
+
+  <!-- ═══════════════════════════════════════════
+       RENDIMIENTO + MÉTRICAS
+  ═══════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab==='rendimiento'">
+    <div class="sec-head"><div><h2>Rendimiento & Métricas del Sistema</h2><p>Estadísticas del modelo y estado del servidor</p></div><button class="btn-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Actualizar</button></div>
+    <div class="four-cols mb-20">
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(38,201,122,0.12)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg></div><div class="sc-val ok-text">{{ perf.precision }}%</div><div class="sc-label">Precisión Promedio</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(56,189,248,0.12)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="sc-val info-text">{{ perf.respuesta }}</div><div class="sc-label">Tiempo de Respuesta</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(255,87,34,0.12)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ember)" stroke-width="2" width="18" height="18"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div><div class="sc-val ember-text">{{ perf.detecciones }}</div><div class="sc-label">Detecciones Totales</div></div>
+      <div class="stat-card"><div class="sc-icon" style="background:rgba(255,152,0,0.12)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2" width="18" height="18"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div><div class="sc-val warn-text">{{ perf.falsos }}</div><div class="sc-label">Falsos Positivos</div></div>
+    </div>
+    <div class="card card-padded mb-16">
+      <p style="font-weight:700;font-family:Rajdhani,sans-serif;font-size:1rem;margin-bottom:4px">Precisión a lo Largo del Tiempo</p>
+      <p class="muted-text" style="font-size:0.78rem;margin-bottom:16px">Semana del 15–21 de Noviembre</p>
+      <div class="line-chart-container">
+        <div class="y-labels"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></div>
+        <div class="line-chart-area">
+          <svg viewBox="0 0 700 160" preserveAspectRatio="none" style="width:100%;height:160px">
+            <defs><linearGradient id="lg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FF5722" stop-opacity="0.3"/><stop offset="100%" stop-color="#FF5722" stop-opacity="0"/></linearGradient></defs>
+            <path d="M0,6 L100,0 L200,8 L300,0 L400,4 L500,2 L600,0 L700,0" fill="url(#lg1)" stroke="none"/>
+            <path d="M0,6 L100,0 L200,8 L300,0 L400,4 L500,2 L600,0 L700,0" fill="none" stroke="var(--ember)" stroke-width="2.5"/>
+            <circle *ngFor="let d of chartData; let i=index" [attr.cx]="i*(700/6)" [attr.cy]="(100-d.v)/100*160" r="4" fill="var(--ember)" stroke="var(--ash-2)" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+      <div class="x-labels"><span *ngFor="let d of chartData">{{ d.f }}</span></div>
+    </div>
+    <div class="card card-padded mb-16">
+      <p style="font-weight:700;font-family:Rajdhani,sans-serif;font-size:1rem;margin-bottom:16px">Estado del Servicio</p>
+      <div class="four-cols" style="margin-bottom:0">
+        <div class="srv-stat"><span>Estado API</span><span class="badge b-ok">{{ servicio.estado }}</span></div>
+        <div class="srv-stat"><span>Uptime</span><strong class="ok-text">{{ servicio.uptime }}</strong></div>
+        <div class="srv-stat"><span>Solicitudes</span><strong>{{ servicio.solicitudes }}</strong></div>
+        <div class="srv-stat"><span>T. Respuesta</span><strong class="info-text">{{ servicio.respuesta }}</strong></div>
+      </div>
+    </div>
+    <div class="card card-padded mb-16">
+      <p style="font-weight:700;font-family:Rajdhani,sans-serif;font-size:1rem;margin-bottom:16px">Métricas del Sistema</p>
+      <div class="recursos-list">
+        <div *ngFor="let r of recursos" class="prog-wrap"><div class="prog-head"><span>{{ r.label }}</span><span>{{ r.valor }}%</span></div><div class="prog-bg"><div class="prog-fill" [style.width]="r.valor+'%'" [style.background]="r.color"></div></div></div>
+      </div>
+    </div>
+    <div class="card card-padded">
+      <div class="sec-head compact"><p style="font-weight:700;font-family:Rajdhani,sans-serif;font-size:1rem">Configuración de Métricas</p><button class="btn-ghost" (click)="editingMetrics=!editingMetrics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>{{ editingMetrics ? 'Guardar' : 'Editar' }}</button></div>
+      <div class="two-cols">
+        <div class="field"><label>Precisión Objetivo (%)</label><input type="number" [(ngModel)]="metricConfig.precision" [disabled]="!editingMetrics" /></div>
+        <div class="field"><label>Tiempo Máximo de Respuesta (s)</label><input type="number" [(ngModel)]="metricConfig.respuesta" [disabled]="!editingMetrics" /></div>
+        <div class="field"><label>Confianza Mínima (0-1)</label><input type="number" [(ngModel)]="metricConfig.confianza" [disabled]="!editingMetrics" step="0.01" /></div>
+        <div class="field"><label>Máx. Falsos Positivos (por semana)</label><input type="number" [(ngModel)]="metricConfig.falsos" [disabled]="!editingMetrics" /></div>
+      </div>
+    </div>
+  </ng-container>
+
+</app-shell>
+
+<!-- ═══════════════════════════════════════════
+     MODAL — NUEVO USUARIO GUBERNAMENTAL
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="modal-header-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="20" height="20">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <div>
+        <h3>Nuevo Usuario Gubernamental</h3>
+        <p>Registra un funcionario con acceso al panel de gobierno</p>
+      </div>
+      <button class="modal-close" (click)="closeModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+
+      <!-- Error banner -->
+      <div class="modal-error" *ngIf="modalError">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        {{ modalError }}
+      </div>
+
+      <!-- Success banner -->
+      <div class="modal-success" *ngIf="modalOk">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="20 6 9 17 4 12"/></svg>
+        ¡Usuario gubernamental creado exitosamente!
+      </div>
+
+      <!-- SECCIÓN 1: Datos personales -->
+      <div class="modal-section">
+        <div class="modal-section-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--ember)" stroke-width="2" width="14" height="14"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Datos Personales
+        </div>
+        <div class="modal-grid-2">
+          <div class="field">
+            <label>Nombre Completo <span class="req">*</span></label>
+            <div class="input-icon-wrap">
+              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <input type="text" [(ngModel)]="nuevoGov.nombre" placeholder="Ej: María López Hernández" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Correo Electrónico <span class="req">*</span></label>
+            <div class="input-icon-wrap">
+              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <input type="email" [(ngModel)]="nuevoGov.correo" placeholder="funcionario@morelos.gob.mx" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Contraseña <span class="req">*</span></label>
+            <div class="input-icon-wrap">
+              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              <input type="password" [(ngModel)]="nuevoGov.password" placeholder="Mínimo 6 caracteres" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Confirmar Contraseña <span class="req">*</span></label>
+            <div class="input-icon-wrap">
+              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              <input type="password" [(ngModel)]="nuevoGov.confirmPassword" placeholder="Repite la contraseña" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 2: Credenciales gubernamentales -->
+      <div class="modal-section">
+        <div class="modal-section-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2" width="14" height="14"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+          Credenciales Gubernamentales
+        </div>
+        <div class="gov-credential-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Se requiere al menos un identificador oficial que acredite la pertenencia al gobierno del estado de Morelos.
+        </div>
+        <div class="modal-grid-2">
+          <div class="field">
+            <label>
+              Número de Trabajador / Ficha
+              <span class="req">*</span>
+            </label>
+            <div class="input-icon-wrap">
+              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+              <input type="text" [(ngModel)]="nuevoGov.numTrabajador" placeholder="Ej: MOR-2025-042" />
+            </div>
+            <p class="field-hint">Número único asignado por la dependencia (RFC, ficha o ID institucional)</p>
+          </div>
+          <div class="field">
+            <label>Cargo / Puesto <span class="req">*</span></label>
+            <div class="input-icon-wrap">
+              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+              <input type="text" [(ngModel)]="nuevoGov.cargo" placeholder="Ej: Analista de Riesgos" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Organización / Secretaría <span class="req">*</span></label>
+            <div class="input-icon-wrap">
+              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <input type="text" [(ngModel)]="nuevoGov.organizacion" placeholder="Ej: Secretaría de Medio Ambiente" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Dependencia / Área <span class="req">*</span></label>
+            <div class="input-icon-wrap">
+              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <input type="text" [(ngModel)]="nuevoGov.dependencia" placeholder="Ej: Dirección de Protección Civil" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Teléfono de Contacto</label>
+            <div class="input-icon-wrap">
+              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.79 19.79 0 01.18 1.22 2 2 0 012.18 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.16 6.16l1.07-1.07a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+              <input type="tel" [(ngModel)]="nuevoGov.telefono" placeholder="Ej: 777-100-2030" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeModal()" [disabled]="savingModal">Cancelar</button>
+      <button class="btn-ember" (click)="guardarGov()" [disabled]="savingModal">
+        <span class="spinner" *ngIf="savingModal"></span>
+        <svg *ngIf="!savingModal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v14a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        {{ savingModal ? 'Guardando...' : 'Crear Usuario Gubernamental' }}
+      </button>
+    </div>
+
+  </div>
+</div>
