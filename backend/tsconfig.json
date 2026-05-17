@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
     /* Language and Environment */
-    "target": "ES2022",
-    "lib": ["ES2022"],
+    "target": "ES2023",
+    "lib": ["ES2023"],
     "types": ["node"],
 
     /* Modules */
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
     "rootDir": ".",
     "outDir": "./dist",
 
@@ -24,9 +24,8 @@
     /* Debugging */
     "sourceMap": true,
 
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*", "types/**/*.d.ts", "scripts/**/*"],
